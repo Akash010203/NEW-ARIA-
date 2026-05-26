@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="Aria API", version="0.3.1",
+app = FastAPI(title="Aria API", version="0.3.2",
     description="AI-powered college companion — Attendance, Tutor, Community, Floating AI")
 
 app.add_middleware(CORSMiddleware,
@@ -66,7 +66,7 @@ class UploadCreate(BaseModel):
 # ── Health ────────────────────────────────────────────────────────────────────
 @app.get("/ping")
 def ping():
-    return {"status": "Aria backend online!", "version": "0.3.1",
+    return {"status": "Aria backend online!", "version": "0.3.2",
             "timestamp": datetime.utcnow().isoformat()}
 
 
@@ -228,8 +228,11 @@ def _ask_groq(prompt: str, history: list, system: str) -> str:
         msgs = [{"role": "system", "content": system}]
         for m in history[-10:]: msgs.append({"role": m["role"], "content": m["content"]})
         msgs.append({"role": "user", "content": prompt})
+        model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+        if model == "llama3-8b-8192":
+            model = "llama-3.1-8b-instant"
         r = client.chat.completions.create(messages=msgs,
-            model=os.getenv("GROQ_MODEL", "llama-3.1-8b-instant"), max_tokens=800, temperature=0.7)
+            model=model, max_tokens=800, temperature=0.7)
         return r.choices[0].message.content.strip()
     except Exception as e:
         return f"Groq error: {str(e)[:150]}"
