@@ -229,7 +229,7 @@ def _ask_groq(prompt: str, history: list, system: str) -> str:
         for m in history[-10:]: msgs.append({"role": m["role"], "content": m["content"]})
         msgs.append({"role": "user", "content": prompt})
         r = client.chat.completions.create(messages=msgs,
-            model=os.getenv("GROQ_MODEL", "llama3-8b-8192"), max_tokens=800, temperature=0.7)
+            model=os.getenv("GROQ_MODEL", "llama-3.1-8b-instant"), max_tokens=800, temperature=0.7)
         return r.choices[0].message.content.strip()
     except Exception as e:
         return f"Groq error: {str(e)[:150]}"
