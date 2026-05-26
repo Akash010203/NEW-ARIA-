@@ -9,7 +9,6 @@ const FrameHeroSection   = dynamic(() => import('@/components/FrameHeroSection')
 const FeaturesGrid       = dynamic(() => import('@/components/FeaturesGrid'),        { ssr:false });
 const AttendanceDemo     = dynamic(() => import('@/components/AttendanceDemo'),      { ssr:false });
 const HowItWorks         = dynamic(() => import('@/components/HowItWorks'),          { ssr:false });
-const Testimonials       = dynamic(() => import('@/components/Testimonials'),        { ssr:false });
 const FinalCTA           = dynamic(() => import('@/components/FinalCTA'),            { ssr:false });
 const Footer             = dynamic(() => import('@/components/Footer'),              { ssr:false });
 const FloatingAI         = dynamic(() => import('@/components/FloatingAI'),          { ssr:false });
@@ -28,7 +27,6 @@ export default function HomePage() {
             <FeaturesGrid />
             <AttendanceDemo />
             <HowItWorks />
-            <Testimonials />
             <FinalCTA />
           </main>
           <Footer />

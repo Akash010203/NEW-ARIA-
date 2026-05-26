@@ -11,7 +11,7 @@ export default function Footer() {
   return (
     <footer style={{ background:'var(--bg)', borderTop:'1px solid rgba(255,255,255,0.06)', padding:'72px 48px 32px' }}>
       <div style={{ maxWidth:'1200px', margin:'0 auto' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 1fr 1fr', gap:'48px', marginBottom:'64px' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4" style={{ gap:'48px', marginBottom:'64px' }}>
           <div>
             <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'16px' }}>
               <div style={{ position:'relative', width:'28px', height:'28px', filter:'drop-shadow(0 0 8px rgba(193,18,31,0.5))' }}>

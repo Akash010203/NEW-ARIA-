@@ -45,11 +45,37 @@ export default function FrameHeroSection() {
   const [progress, setProgress] = useState(0);
   const frameIdxRef = useRef(0);
   const rafRef = useRef<number>();
+  const [isMobile, setIsMobile] = useState(false);
+  const [scrollMultiplier, setScrollMultiplier] = useState(12);
+
+  // ── Responsive Detect ───────────────────────────────────────────────────
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      setScrollMultiplier(mobile ? 6 : 12);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile, { passive: true });
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // ── Preload ──────────────────────────────────────────────────────────────
   useEffect(() => {
     let loaded = 0;
     framesRef.current = new Array(FRAME_COUNT).fill(null);
+
+    const width = window.innerWidth;
+    // On mobile, load every 4th frame. On tablet, load every 2nd frame. On desktop, load all.
+    const step = width <= 768 ? 4 : (width <= 1024 ? 2 : 1);
+    
+    // Calculate total frames we actually plan to load
+    let totalToLoad = 1;
+    for (let i = 2; i <= FRAME_COUNT; i++) {
+      if (i === FRAME_COUNT || (i - 1) % step === 0) {
+        totalToLoad++;
+      }
+    }
 
     // 1. Load the first frame immediately so the site is interactive instantly
     const firstImg = new Image();
@@ -57,14 +83,14 @@ export default function FrameHeroSection() {
       framesRef.current[0] = firstImg;
       setReady(true);
       loaded++;
-      setLoadPct(Math.round((loaded / FRAME_COUNT) * 100));
+      setLoadPct(Math.round((loaded / totalToLoad) * 100));
       // Load rest of the frames
       loadRemaining();
     };
     firstImg.onerror = () => {
       setReady(true);
       loaded++;
-      setLoadPct(Math.round((loaded / FRAME_COUNT) * 100));
+      setLoadPct(Math.round((loaded / totalToLoad) * 100));
       loadRemaining();
     };
     firstImg.src = frameSrc(1); // Set src AFTER onload/onerror registration!
@@ -72,16 +98,21 @@ export default function FrameHeroSection() {
     const loadRemaining = () => {
       // Load frames 2 to 240
       for (let i = 2; i <= FRAME_COUNT; i++) {
+        // Skip frames based on step to save mobile memory/bandwidth
+        if (i !== FRAME_COUNT && (i - 1) % step !== 0) {
+          continue;
+        }
+
         const img = new Image();
         const idx = i - 1;
         img.onload = () => {
           framesRef.current[idx] = img;
           loaded++;
-          setLoadPct(Math.round((loaded / FRAME_COUNT) * 100));
+          setLoadPct(Math.round((loaded / totalToLoad) * 100));
         };
         img.onerror = () => {
           loaded++;
-          setLoadPct(Math.round((loaded / FRAME_COUNT) * 100));
+          setLoadPct(Math.round((loaded / totalToLoad) * 100));
         };
         img.src = frameSrc(i); // Set src AFTER onload/onerror registration!
       }
@@ -156,7 +187,7 @@ export default function FrameHeroSection() {
     <section
       ref={sectionRef}
       id="showcase"
-      style={{ height:`${SECTION_HEIGHT}px`, position:'relative', background:CANVAS_BG }}
+      style={{ height:`${FRAME_COUNT * scrollMultiplier}px`, position:'relative', background:CANVAS_BG }}
     >
       {/* Loading bar — shown before frames ready */}
       {!ready && (
@@ -249,12 +280,13 @@ export default function FrameHeroSection() {
           {TEXT_LAYERS.slice(1).map((layer, i) => {
             const op = getOpacity(progress, layer.from, layer.to);
             const y  = getY(progress, layer.from, layer.to);
-            const pos: React.CSSProperties =
-              layer.side==='left'   ? {left:'5%',  top:'50%', transform:`translateY(calc(-50% + ${y}px))`} :
-              layer.side==='right'  ? {right:'5%', top:'25%', transform:`translateY(calc(-50% + ${y}px))`} :
-                                      {left:'50%', bottom:'10%',transform:`translateX(-50%) translateY(${y}px)`};
+            const pos: React.CSSProperties = isMobile
+              ? { left: '5%', right: '5%', bottom: '15%', transform: `translateY(${y}px)` }
+              : layer.side==='left'   ? {left:'5%',  top:'50%', transform:`translateY(calc(-50% + ${y}px))`} :
+                layer.side==='right'  ? {right:'5%', top:'25%', transform:`translateY(calc(-50% + ${y}px))`} :
+                                        {left:'50%', bottom:'10%',transform:`translateX(-50%) translateY(${y}px)`};
             return (
-              <div key={i} style={{position:'absolute',zIndex:15,maxWidth:'400px',pointerEvents:'none',opacity:op,willChange:'opacity,transform',...pos}}>
+              <div key={i} style={{position:'absolute',zIndex:15,maxWidth:isMobile ? 'none' : '400px',pointerEvents:'none',opacity:op,willChange:'opacity,transform',...pos}}>
                 <div style={{display:'inline-flex',alignItems:'center',gap:'8px',fontFamily:'var(--font-jetbrains)',fontSize:'10px',fontWeight:500,letterSpacing:'.15em',textTransform:'uppercase',color:'#FF4D5A',background:'rgba(193,18,31,0.10)',border:'1px solid rgba(193,18,31,0.2)',borderRadius:'100px',padding:'5px 12px',marginBottom:'14px'}}>
                   {layer.label}
                 </div>

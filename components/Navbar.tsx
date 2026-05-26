@@ -55,7 +55,7 @@ export default function Navbar() {
       </Link>
 
       {/* Desktop links */}
-      <ul className="hidden md:flex" style={{ display:'flex', alignItems:'center', gap:'28px', listStyle:'none' }}>
+      <ul className="hidden md:flex" style={{ alignItems:'center', gap:'28px', listStyle:'none' }}>
         {LINKS.map(l => (
           <li key={l.href}>
             <Link href={l.href} className="nav-link" style={{ textDecoration:'none' }}>{l.label}</Link>
@@ -64,7 +64,7 @@ export default function Navbar() {
       </ul>
 
       {/* CTA */}
-      <div className="hidden md:flex" style={{ display:'flex', alignItems:'center', gap:'10px' }}>
+      <div className="hidden md:flex" style={{ alignItems:'center', gap:'10px' }}>
         <Link href="/test" style={{ textDecoration:'none' }}>
           <button style={{ padding:'8px 14px', borderRadius:'8px', background:'transparent',
             border:'1px solid rgba(255,255,255,0.08)', color:'rgba(140,140,160,0.5)',
