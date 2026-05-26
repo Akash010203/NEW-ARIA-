@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="Aria API", version="0.3.0",
+app = FastAPI(title="Aria API", version="0.3.1",
     description="AI-powered college companion — Attendance, Tutor, Community, Floating AI")
 
 app.add_middleware(CORSMiddleware,
@@ -66,7 +66,7 @@ class UploadCreate(BaseModel):
 # ── Health ────────────────────────────────────────────────────────────────────
 @app.get("/ping")
 def ping():
-    return {"status": "Aria backend online!", "version": "0.3.0",
+    return {"status": "Aria backend online!", "version": "0.3.1",
             "timestamp": datetime.utcnow().isoformat()}
 
 
