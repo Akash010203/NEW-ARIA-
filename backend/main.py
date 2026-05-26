@@ -219,6 +219,10 @@ def _ask_ollama(prompt: str, history: list, system: str) -> str:
 
 def _ask_groq(prompt: str, history: list, system: str) -> str:
     try:
+        # Prevent httpx proxy environment parsing bug on Render
+        for key in ["http_proxy", "https_proxy", "all_proxy", "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY"]:
+            os.environ.pop(key, None)
+            
         from groq import Groq
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         msgs = [{"role": "system", "content": system}]
