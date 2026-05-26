@@ -184,11 +184,7 @@ def clear_chat(session_id: str):
 
 def _ask_ollama(prompt: str, history: list, system: str) -> str:
     """
-    Calls Ollama exactly as:
-        import requests
-        res = requests.post("http://localhost:11434/api/generate",
-                            json={"model":"llama3.2","prompt":"your prompt","stream":False})
-        print(res.json()["response"])
+    Tries Ollama first (for local dev). If unavailable, auto-falls back to Groq (for cloud/Render).
     """
     model = os.getenv("OLLAMA_MODEL", "llama3.2")
 
@@ -202,23 +198,24 @@ def _ask_ollama(prompt: str, history: list, system: str) -> str:
     try:
         res = requests.post(
             "http://localhost:11434/api/generate",
-            json={
-                "model": model,
-                "prompt": full_prompt,
-                "stream": False
-            },
-            timeout=60
+            json={"model": model, "prompt": full_prompt, "stream": False},
+            timeout=8  # Short timeout — if Ollama not running, fall through quickly
         )
         return res.json()["response"].strip()
 
-    except requests.exceptions.ConnectionError:
-        return "Ollama is not running. Open a terminal and run: ollama serve"
-    except requests.exceptions.Timeout:
-        return "Ollama timed out. The model may still be loading — try again in a few seconds."
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+        # Ollama not available (cloud deployment) — fall back to Groq
+        groq_key = os.getenv("GROQ_API_KEY")
+        if groq_key:
+            return _ask_groq(prompt, history, system)
+        return (
+            "🤖 Aria AI is running in demo mode. "
+            "To enable full AI chat, set GROQ_API_KEY in your environment variables."
+        )
     except KeyError:
         return f"Ollama returned unexpected response: {res.text[:200]}"
     except Exception as e:
-        return f"Ollama error: {str(e)[:120]}"
+        return f"AI error: {str(e)[:120]}"
 
 def _ask_groq(prompt: str, history: list, system: str) -> str:
     try:
