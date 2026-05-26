@@ -50,18 +50,42 @@ export default function FrameHeroSection() {
   useEffect(() => {
     let loaded = 0;
     framesRef.current = new Array(FRAME_COUNT).fill(null);
-    for (let i=1; i<=FRAME_COUNT; i++) {
-      const img = new Image();
-      img.src = frameSrc(i);
-      const idx = i-1;
-      const done = () => {
-        framesRef.current[idx] = img;
-        loaded++;
-        setLoadPct(Math.round((loaded/FRAME_COUNT)*100));
-        if (loaded===FRAME_COUNT) setReady(true);
-      };
-      img.onload = done; img.onerror = done;
-    }
+
+    // 1. Load the first frame immediately so the site is interactive instantly
+    const firstImg = new Image();
+    firstImg.onload = () => {
+      framesRef.current[0] = firstImg;
+      setReady(true);
+      loaded++;
+      setLoadPct(Math.round((loaded / FRAME_COUNT) * 100));
+      // Load rest of the frames
+      loadRemaining();
+    };
+    firstImg.onerror = () => {
+      setReady(true);
+      loaded++;
+      setLoadPct(Math.round((loaded / FRAME_COUNT) * 100));
+      loadRemaining();
+    };
+    firstImg.src = frameSrc(1); // Set src AFTER onload/onerror registration!
+
+    const loadRemaining = () => {
+      // Load frames 2 to 240
+      for (let i = 2; i <= FRAME_COUNT; i++) {
+        const img = new Image();
+        const idx = i - 1;
+        img.onload = () => {
+          framesRef.current[idx] = img;
+          loaded++;
+          setLoadPct(Math.round((loaded / FRAME_COUNT) * 100));
+        };
+        img.onerror = () => {
+          loaded++;
+          setLoadPct(Math.round((loaded / FRAME_COUNT) * 100));
+        };
+        img.src = frameSrc(i); // Set src AFTER onload/onerror registration!
+      }
+    };
   }, []);
 
   // ── Resize canvas ────────────────────────────────────────────────────────
@@ -80,8 +104,23 @@ export default function FrameHeroSection() {
   // ── Draw ─────────────────────────────────────────────────────────────────
   const drawFrame = (idx: number) => {
     const c=canvasRef.current; if(!c) return;
-    const img=framesRef.current[Math.max(0,Math.min(idx,FRAME_COUNT-1))];
-    if(!img?.complete) return;
+    
+    // Find closest loaded frame to avoid black flickers/blanks
+    let img = null;
+    for (let offset = 0; offset < FRAME_COUNT; offset++) {
+      const left = idx - offset;
+      const right = idx + offset;
+      if (left >= 0 && framesRef.current[left] && framesRef.current[left]?.complete && (framesRef.current[left]?.naturalWidth || 0) > 0) {
+        img = framesRef.current[left];
+        break;
+      }
+      if (right < FRAME_COUNT && framesRef.current[right] && framesRef.current[right]?.complete && (framesRef.current[right]?.naturalWidth || 0) > 0) {
+        img = framesRef.current[right];
+        break;
+      }
+    }
+
+    if (!img) return;
     const ctx=c.getContext('2d'); if(!ctx) return;
     ctx.clearRect(0,0,c.width,c.height);
     const scale=Math.max(c.width/img.naturalWidth, c.height/img.naturalHeight);
